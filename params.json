@@ -1,0 +1,6 @@
+{
+  "name": "Git-reset-repo",
+  "tagline": "Bash script that resets all commits of a git repo",
+  "body": "# git-reset-repo\r\n\r\nLicensed under GPLv3. Copright 2016 Daniil Gentili.  \r\n\r\nBash script that resets all commits of a git repo. Useful to reduce a repository's size.\r\n\r\n\r\nInstallation:  \r\nRun the following command as root:  \r\n```\r\nwget -O /usr/bin/git-reset-repo https://raw.githubusercontent.com/danog/git-reset-repo/master/git-reset-repo || curl -o /usr/bin/git-reset-repo https://raw.githubusercontent.com/danog/git-reset-repo/master/git-reset-repo && chmod +x /usr/bin/git-reset-repo\r\n```\r\n\r\nThen simply run ```git reset-repo``` in your git repository and follow instructions.  \r\n\r\n\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
