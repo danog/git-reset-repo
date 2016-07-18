@@ -1,0 +1,84 @@
+#!/bin/bash
+# git-reset-repo script v1.
+# Created by Daniil Gentili (https://daniil.it)
+# Copyright 2016 Daniil Gentili
+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+gpl() {
+	echo "git-reset-repo  Copyright (C) 2016  Daniil Gentili
+This program comes with ABSOLUTELY NO WARRANTY; for details see https://github.com/danog/git-reset-repo/blob/master/LICENSE.
+This is free software, and you are welcome to redistribute it
+under certain conditions see https://github.com/danog/git-reset-repo/blob/master/LICENSE.
+
+"
+}
+
+help() {
+	gpl
+	echo "Usage: git reset-repo [options]
+This command helps you reset the history of a git repo."
+
+	exit
+}
+
+version() {
+	echo "git-reset-repo script v1"
+	exit
+}
+
+case $1 in
+	'-v'\|'--version')
+		version
+		;;
+	'-h'\|'--help')
+		echo "git-reset-repo script v1"
+		;;
+esac
+
+git rev-parse --git-dir &> /dev/null || { echo "You're not in a git repository. Please cd to a git repostory and try again." ; exit 1; }
+
+gpl
+
+
+read -p "Which branches should I reset (list of branches separated by spaces, do not enter anything to reset all local branches)? " branches
+
+[ "$branches" = '' ] && branches=$(git for-each-ref --shell --format='%(refname:short)' refs/heads/ | sed "s/'//g")
+
+DIR="/tmp/$RANDOM"
+mkdir $DIR || { echo "Couldn't create temporary directory."; exit 1; }
+
+error=false
+for branch in $branches;do 
+	echo "Resetting $branch..."
+	git checkout $branch&>/dev/null || { echo "Couldn't checkout $branch."; continue; }
+	git add -A >/dev/null
+	git commit -m "First commit" >/dev/null
+	mkdir $DIR/$branch || { echo "Couldn't create temporary directory."; continue; }
+	git branch -m gitresetrepo$branch || { echo "Couldn't rename $branch."; error=true; continue; }
+	files=$(ls -a | sed '/^\.$\|^\.\.$\|^\.git$/d')
+	cp -a $files $DIR/$branch
+	git checkout --orphan $branch &>/dev/null || { echo "Couldn't recreate branch."; error=true; continue; }
+	for file in $files;do cp -a $DIR/$branch/$file .;done
+	git add -A || { echo "Couldn't add files to git index."; error=true;continue; }
+	git commit -m "First commit ($branch)" >/dev/null || { echo "Couldn't commit changes."; error=true;continue; } 
+	git branch -D gitresetrepo$branch &>/dev/null|| { echo "Couldn't delete old branch."; error=true; continue; }
+done
+
+rm -R $DIR
+[ $error = true ] &&  { echo "An error occurred. Please check repo integrity before pushing changes."; exit 1; } || echo "No errors occurred, you may now push changes with git push --all -f."
+exit 0
+
+ 
+
